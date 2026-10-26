@@ -3,11 +3,19 @@ library(broom)
 
 # Functions and across ----
 
-ds <- ds <- palmerpenguins::penguins %>% filter_out(species == "Chinstrap")
+ds <- palmerpenguins::penguins %>% filter_out(species == "Chinstrap")
 
 # Write a coefficient of variation fx (sd / mean * 100) that omits NAs and rounds the output
 # Make digits an optional argument that controls how many digits to round the response
 # Think about what would make a sensible default value for digits
+glimpse(ds)
+
+cv <- function(x, digits = 0) round(sd(x, na.rm = T)/mean(x, na.rm = T)*100, digits)
+
+# Using across, find the coefficient of variation for all numeric variables except year
+# rounded to 2 decimals
+
+ds %>% summarize(across(bill_length_mm:body_mass_g, ~ cv(.x, 2)))
 
 
 

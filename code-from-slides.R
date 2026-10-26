@@ -1,5 +1,22 @@
 library(tidyverse)
 
+# You need to save the function first before using it
+# if you edit the function you need to re-save it and re-run following functions or else the original function will take place
+# if you download multiple functions or load different packages you have to be careful with which functions are being used
+# and if there are any conflicts with how those other packages use that function
+# conflicted package that forces you to say you are using X function from X package 
+# ℹ Use the conflicted package to force all conflicts to become errors!
+
+say_hello <- function(input_name) {
+  hello_output <- str_glue("Hello, {input_name}!")
+  return(hello_output)
+}
+say_hello(input_name = "class")
+
+hello_world <- say_hello("world!")
+print(hello_world)
+
+
 # Defining functions ----
 
 hyp <- function(side_a, side_b) {
@@ -8,12 +25,12 @@ hyp <- function(side_a, side_b) {
   h <- sqrt(a + b)
   return(h)
 }
-hyp(3, 4)
+hyp(3, 4) # this is automatically adding 3 to side a and 4 to side b
 hyp(9, 12)
 
-hyp <- function(side_a, side_b = NULL) {
+hyp <- function(side_a, side_b = NULL) { # null means nothing -- does not exist
   a <- side_a^2
-  b <- ifelse(is.null(side_b), a, side_b^2)
+  b <- ifelse(is.null(side_b), a, side_b^2) # if side B is null then use side A again otherwise sqr side b
   h <- sqrt(a + b)
   return(h)
 }
@@ -60,9 +77,10 @@ data <- c(4, 6, 9, 12, 5, 6, NA)
 summary_stats_na(data)
 
 # Piped expressions can be saved as functions
-avg_height_mass <- . %>% 
+avg_height_mass <- . %>% # if you start a piped expression with a period, that can be stored as a function
   select(height, mass) %>% 
   summarize(mean_ht = mean_na(height), mean_ms = mean_na(mass))
+# selects height and mass from a data frame itll 
 
 starwars %>% avg_height_mass
 starwars %>% group_by(species) %>% avg_height_mass
@@ -73,14 +91,20 @@ starwars %>% group_by(species) %>% avg_height_mass
 ds <- starwars %>% select(-where(is.list))
 ds %>% mutate(across(everything(), as.character)) 
 ds %>% mutate(across(c("height", "mass"), round)) 
-ds %>% mutate(across(where(is.numeric), round, .names = "{.col}_rounded"), .after = name) 
-ds %>% mutate(across(where(is.numeric), ~ .x *100)) 
-ds %>% mutate(across(ends_with("color"), ~ str_remove_all(.x, "[:punct:]")))
+ds %>% mutate(across(where(is.numeric), round, .names = "{.col}_rounded"), .after = name) # creating new columns of numeric columns where they are rounded
+ds %>% mutate(across(where(is.numeric), ~ .x *100)) # multiplying every numeric column by 100
+ds %>% mutate(across(ends_with("color"), ~ str_remove_all(.x, "[:punct:]"))) # str remove all can remove things like punctuation
+  # the first argument of it is the thing youre removing from and then telling it what you want to remove
+  # uses .x as the argument
 
 # Summarize
 fx_list <- list(mean = mean_na, sd = sd_na, se = se_na)
-ds %>% summarize(across(height:mass, ~ mean(.x, na.rm = T)))
+ds %>% summarize(across(height:mass, ~ mean(.x, na.rm = T))) # itll run it on height and mass and will put each one respectively in .x
 ds %>% summarize(across(height:mass, mean_na)) 
+  # the semicolon is saying like select these two columns; if you use a comma in between then it wouldnt work 
+  # if there were other columns in between height and mass then it would also be selecting those in between but
+  # in this case its only height and mass so not an issue
+
 ds %>% summarize(across(where(is.numeric), fx_list))
 ds %>% summarize(across(where(is.numeric), fx_list, .names = "{.fn}_{.col}"))
 
@@ -97,6 +121,7 @@ ds %>% summary_stats("mass")
 ds %>% group_by(species) %>% filter(n() > 2) %>% summary_stats(c("height","mass"))
 
 # For loops ----
+# key word, something in parenthesis and something in curly brackets
 for (i in c(1, 2, 3, 4, 5)) {
   # "i" will take on each value of the vector 1:5
   print(paste("This is loop iteration", i))
@@ -114,7 +139,7 @@ cor_output <- vector() #empty vector to store results
 for (p in predictors) {
   #Calculate each predictor's correlation with 'mpg'
   cor_output[p] <- cor(mtcars['mpg'], mtcars[p])
-}
+} # p is each one in predictors so first p will be "cyl" then "hp" then "drat"
 cor_output
 
 # Linear regression repetitive code
@@ -129,6 +154,20 @@ for (p in predictors) {
   print(p) #Need to explicitly print things within loops so that they display
   print(summary(res))
 }
+
+# for loops vs map
+values_to_be_squared <- 1:5
+for(value in values_to_be_squared) {
+  print(value^2) # the "value" piece is something that can be changed to whatever
+}
+# will do the loop 5 times
+
+map_int(values_to_be_squared, ~ .x^2)
+# get the same output as you do in loops but with map you have more control about how you want it to output
+# in for loop you need to decide where you want to store it
+# for loop might be preferred if you need to loop over multiple things at once, this may be more flexible
+
+
 
 # Map() ----
 days_of_the_week <- c("Mon", "Tues", "Wed", "Thur", "Fri", "Sat", "Sun")
@@ -146,7 +185,7 @@ cor_output
 # Use set_names to make mapped outputs more readable
 cor_output %>% set_names(predictors)
 
-# Mapping linear regression formulae
+# Mapping linear regression formula
 predictors <- c("cyl", "disp", "hp", "drat", "wt", "qsec")
 output <- map(predictors, ~ lm(as.formula(str_glue("mpg ~ {.x}")), data = mtcars))
 output %>% set_names(predictors)
